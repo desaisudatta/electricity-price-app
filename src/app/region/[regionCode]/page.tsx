@@ -1,19 +1,16 @@
 "use client";
-
 import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
 import Link from 'next/link';
-import { Line } from 'react-chartjs-2';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@/components/ui/tabs'; // import shadcn tabs
+import { Line, Bar } from 'react-chartjs-2';
+import CustomTabs from '@/components/ui/customTabs'; // Import the CustomTabs component
+import { regions, formatDate, calculateDailyStats, calculateVolatility } from '@/lib/constants';
+import { fetchRegionDetails } from '@/lib/api';
 import {
   Chart as ChartJS,
   LineElement,
+  BarElement,
   CategoryScale,
   LinearScale,
   PointElement,
@@ -23,19 +20,7 @@ import {
 } from 'chart.js';
 
 // Register Chart.js components
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend);
-
-// Fetch region data by regionCode
-const fetchRegionDetails = async (regionCode: string) => {
-  const res = await fetch(`https://api.energy-charts.info/price?bzn=${regionCode}`);
-  if (!res.ok) throw new Error('Failed to fetch region details');
-  return res.json();
-};
-
-function formatDate(epochTime: number, locale: string = 'en-US', options?: Intl.DateTimeFormatOptions): string {
-  const date = new Date(epochTime * 1000); // Convert seconds to milliseconds
-  return date.toLocaleDateString(locale, options);
-}
+ChartJS.register(LineElement,BarElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend);
 
 export default function RegionDetailPage({ params }: { params: { regionCode: string } }) {
   const { regionCode } = params;
@@ -43,7 +28,6 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data using useEffect
   useEffect(() => {
     const getData = async () => {
       try {
@@ -62,16 +46,48 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
   if (loading) return <p>Loading region details...</p>;
   if (error) return <p>Error loading region details: {error}</p>;
 
-  // Prepare chart data
-  const chartData = {
-    labels: data?.unix_seconds?.map((date: any) => formatDate(date)),
+  // Calculate Price Volatility
+  const volatilityData = calculateVolatility(data?.price);
+  const volatilityChartData = {
+    labels: data?.unix_seconds?.slice(1).map((date: any) => formatDate(date)), // Adjust labels for volatility
     datasets: [
       {
-        label: `Price (€/MWh) in ${regionCode}`,
-        data: data?.price?.map((priceData: any) => priceData),
+        label: `Price Volatility (%) in ${regionCode}`,
+        data: volatilityData,
+        borderColor: 'rgba(255,159,64,1)',
+        backgroundColor: 'rgba(255,159,64,0.2)',
+        fill: true,
+      },
+    ],
+  };
+
+    // Calculate Daily Low, High, and Average
+    const dailyStats = calculateDailyStats(data?.price);
+
+  // Prepare chart data for Daily Low, High, Average
+  const dailyLowHighAverageChartData = {
+    labels: data?.unix_seconds?.filter((_: any, index: number) => index % 24 === 0).map((date: any) => formatDate(date)), // Extract one label per day
+    datasets: [
+      {
+        label: 'Daily Low (€/MWh)',
+        data: dailyStats.map(stat => stat.dailyLow),
         borderColor: 'rgba(75,192,192,1)',
         backgroundColor: 'rgba(75,192,192,0.2)',
-        fill: true,
+        fill: false,
+      },
+      {
+        label: 'Daily High (€/MWh)',
+        data: dailyStats.map(stat => stat.dailyHigh),
+        borderColor: 'rgba(255,99,132,1)',
+        backgroundColor: 'rgba(255,99,132,0.2)',
+        fill: false,
+      },
+      {
+        label: 'Daily Average (€/MWh)',
+        data: dailyStats.map(stat => stat.dailyAverage),
+        borderColor: 'rgba(153,102,255,1)',
+        backgroundColor: 'rgba(153,102,255,0.2)',
+        fill: false,
       },
     ],
   };
@@ -83,50 +99,55 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
     },
   };
 
+
   return (
-    <div className="min-h-screen p-4 sm:p-8">
-      <h1 className="text-2xl font-bold mb-4">Region Details: {regionCode}</h1>
-
-      {/* Tabs */}
-      <Tabs defaultValue="details" className="w-full">
-        <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="chart">Price Chart</TabsTrigger>
-        </TabsList>
-
-        {/* Tab Content */}
-        <TabsContent value="details">
-          {/* Table for region details */}
+    <div className="grid items-center justify-items-center p-2 sm:p-8 font-[family-name:var(--font-geist-sans)]">
+      <h1 className="text-2xl font-bold mb-4">Region Details: {regions.filter((region) => region.regionCode === regionCode)[0].regionName}</h1>
+      {/* Custom Tabs */}
+      <CustomTabs defaultValue="currentPrices" tabs={[
+        { value: 'currentPrices', label: 'Current Prices' },
+        { value: 'dailyLowHighAverage', label: 'Daily Low, High, Average' }, // New tab for daily low, high, average
+        { value: 'priceVolatility', label: 'Price Volatility' }, // New tab for price volatility
+      ]}>
+        <div value="currentPrices">
+          {/* Current Prices Table */}
           <Table className="w-full table-auto">
             <thead>
               <tr>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Price (€/MWh)</th>
+                <th className="text-center p-2">Date</th>
+                <th className="text-center p-2">Price (€/MWh)</th>
               </tr>
             </thead>
             <tbody>
               {data?.price?.map((priceData: any, index: number) => (
                 <tr key={index} className="border-b">
-                  <td className="p-2">{formatDate(data?.unix_seconds[index])}</td>
-                  <td className="p-2">{priceData}</td>
+                  <td className="text-center p-2">{formatDate(data?.unix_seconds[index])}</td>
+                  <td className="text-center p-2">{priceData}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="chart">
-          {/* Line chart for region prices */}
+        <div value="dailyLowHighAverage">
+          {/* Daily Low, High, Average Chart */}
           <div className="w-full h-64">
-            <Line data={chartData} options={options} />
+            <Bar data={dailyLowHighAverageChartData} options={options} />
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
 
-      {/* Go Back Button */}
+        <div value="priceVolatility">
+          {/* Price Volatility Chart */}
+          <div className="w-full h-64">
+            <Line data={volatilityChartData} options={options} />
+          </div>
+        </div>
+      </CustomTabs>
+      <div>
       <Link href={`/`}>
-        <Button className="mt-4">Go Back</Button>
+         <Button>Go Back</Button>
       </Link>
+      </div>
     </div>
   );
 }

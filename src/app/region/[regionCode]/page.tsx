@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Button } from "@/components/ui/button";
 import { Table } from "@/components/ui/table";
-import Link from 'next/link';
+import { Spinner } from "@/components/ui/spinner"; // Import Spinner
 import { Line, Bar } from 'react-chartjs-2';
 import CustomTabs from '@/components/ui/customTabs'; // Import the CustomTabs component
 import { regions, formatDate, calculateDailyStats, calculateVolatility } from '@/lib/constants';
@@ -25,7 +24,7 @@ ChartJS.register(LineElement,BarElement, CategoryScale, LinearScale, PointElemen
 export default function RegionDetailPage({ params }: { params: { regionCode: string } }) {
   const { regionCode } = params;
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,14 +35,22 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
       } catch (error: any) {
         setError(error.message);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading after data is fetched
       }
     };
 
     getData();
   }, [regionCode]);
 
-  if (loading) return <p>Loading region details...</p>;
+  // Conditionally render spinner during loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen"> {/* Full-screen centered spinner */}
+        <Spinner size="medium" /> {/* Display Spinner while loading */}
+      </div>
+    );
+  }
+
   if (error) return <p>Error loading region details: {error}</p>;
 
   // Calculate Price Volatility
@@ -61,8 +68,8 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
     ],
   };
 
-    // Calculate Daily Low, High, and Average
-    const dailyStats = calculateDailyStats(data?.price);
+  // Calculate Daily Low, High, and Average
+  const dailyStats = calculateDailyStats(data?.price);
 
   // Prepare chart data for Daily Low, High, Average
   const dailyLowHighAverageChartData = {
@@ -72,49 +79,78 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
         label: 'Daily Low (€/MWh)',
         data: dailyStats.map(stat => stat.dailyLow),
         borderColor: 'rgba(75,192,192,1)',
-        backgroundColor: 'rgba(75,192,192,0.2)',
+        backgroundColor: 'rgba(75,192,192,1)',
         fill: false,
       },
       {
         label: 'Daily High (€/MWh)',
         data: dailyStats.map(stat => stat.dailyHigh),
         borderColor: 'rgba(255,99,132,1)',
-        backgroundColor: 'rgba(255,99,132,0.2)',
+        backgroundColor: 'rgba(255,99,132,1)',
         fill: false,
       },
       {
         label: 'Daily Average (€/MWh)',
         data: dailyStats.map(stat => stat.dailyAverage),
         borderColor: 'rgba(153,102,255,1)',
-        backgroundColor: 'rgba(153,102,255,0.2)',
+        backgroundColor: 'rgba(153,102,255,1)',
         fill: false,
       },
     ],
   };
-
   const options = {
     scales: {
-      x: { title: { display: true, text: 'Date' } },
-      y: { title: { display: true, text: 'Price (€/MWh)' } },
+      x: {
+        title: {
+          display: true,
+          text: 'Date',
+          font: {
+            size: 16, // Font size for the axis title
+            weight: 'bold', // Bold axis title
+          },
+        },
+        ticks: {
+          font: {
+            size: 14, // Font size for the labels
+          },
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Price (€/MWh)',
+          font: {
+            size: 16, // Font size for the axis title
+            weight: 'bold', // Bold axis title
+          },
+        },
+        ticks: {
+          font: {
+            size: 14, // Font size for the labels
+          },
+        },
+      },
     },
   };
-
+  
+  
 
   return (
     <div className="grid items-center justify-items-center p-2 sm:p-8 font-[family-name:var(--font-geist-sans)]">
       <h1 className="text-2xl font-bold mb-4">Region Details: {regions.filter((region) => region.regionCode === regionCode)[0].regionName}</h1>
+
       {/* Custom Tabs */}
       <CustomTabs defaultValue="currentPrices" tabs={[
         { value: 'currentPrices', label: 'Current Prices' },
-        { value: 'dailyLowHighAverage', label: 'Daily Low, High, Average' }, // New tab for daily low, high, average
-        { value: 'priceVolatility', label: 'Price Volatility' }, // New tab for price volatility
+        { value: 'dailyLowHighAverage', label: 'Daily Low, High, Average' },
+        { value: 'priceVolatility', label: 'Price Volatility' },
       ]}>
         <div value="currentPrices">
           {/* Current Prices Table */}
           <Table className="w-full table-auto">
             <thead>
               <tr>
-                <th className="text-center p-2">Date</th>
+                <th className="text-center p-2">Date (MM/DD/YYYY)</th>
                 <th className="text-center p-2">Price (€/MWh)</th>
               </tr>
             </thead>
@@ -143,11 +179,6 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
           </div>
         </div>
       </CustomTabs>
-      <div>
-      <Link href={`/`}>
-         <Button>Go Back</Button>
-      </Link>
-      </div>
     </div>
   );
 }

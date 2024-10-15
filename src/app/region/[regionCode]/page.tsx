@@ -19,6 +19,9 @@ import {
 } from 'chart.js';
 import { ChartOptions } from 'chart.js';
 import { TabsContent } from '@/components/ui/tabs';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
 // Register Chart.js components
 ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend);
 
@@ -52,7 +55,31 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
     );
   }
 
-  if (error) return <p>Error loading region details: {error}</p>;
+  // Centering the error message
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen"> {/* Full-screen centered error message */}
+        <p className="text-red-500 text-lg text-center mb-4">{error}</p>
+        <Link href={'/'}>
+          <Button aria-label={`Go To Overview`}>Go To Overview</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  // Prepare chart data for Current Prices
+  const currentPricesChartData = {
+    labels: data?.unix_seconds?.map((date: any) => formatDate(date)),
+    datasets: [
+      {
+        label: 'Current Prices (€/MWh)',
+        data: data?.price,
+        borderColor: 'rgba(54,162,235,1)',
+        backgroundColor: 'rgba(54,162,235,0.2)',
+        fill: true,
+      },
+    ],
+  };
 
   // Calculate Price Volatility
   const volatilityData = calculateVolatility(data?.price);
@@ -99,6 +126,7 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
       },
     ],
   };
+
   const options: ChartOptions<'bar' | 'line'> = {
     scales: {
       x: {
@@ -134,17 +162,18 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
     },
   };
 
-
-
   return (
-    <div className="grid items-center justify-items-center p-2 sm:p-8 font-[family-name:var(--font-geist-sans)]">
-      <h1 className="text-2xl font-bold mb-4">Region Details: {regions.filter((region) => region.regionCode === regionCode)[0].regionName}</h1>
+    <div className="grid items-center justify-items-center p-4 sm:p-8 lg:p-12 font-[family-name:var(--font-geist-sans)]">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center">
+        Region Details: {regions.filter((region) => region.regionCode === regionCode)[0].regionName}
+      </h1>
 
       {/* Custom Tabs */}
       <CustomTabs
         defaultValue="currentPrices"
         tabs={[
           { value: 'currentPrices', label: 'Current Prices' },
+          { value: 'currentPricesChart', label: 'Current Prices Chart' },
           { value: 'dailyLowHighAverage', label: 'Daily Low, High, Average' },
           { value: 'priceVolatility', label: 'Price Volatility' },
         ]}
@@ -169,21 +198,27 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
           </Table>
         </TabsContent>
 
+        <TabsContent value="currentPricesChart">
+          {/* Current Prices Chart */}
+          <div className="w-full h-64 md:h-72 lg:h-80">
+            <Line data={currentPricesChartData} options={options} />
+          </div>
+        </TabsContent>
+
         <TabsContent value="dailyLowHighAverage">
           {/* Daily Low, High, Average Chart */}
-          <div className="w-full h-64">
+          <div className="w-full h-64 md:h-72 lg:h-80">
             <Bar data={dailyLowHighAverageChartData} options={options} />
           </div>
         </TabsContent>
 
         <TabsContent value="priceVolatility">
           {/* Price Volatility Chart */}
-          <div className="w-full h-64">
+          <div className="w-full h-64 md:h-72 lg:h-80">
             <Line data={volatilityChartData} options={options} />
           </div>
         </TabsContent>
       </CustomTabs>
-
     </div>
   );
 }

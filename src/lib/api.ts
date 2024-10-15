@@ -15,7 +15,8 @@ export const fetchRegionDetails = async (regionCode: string) => {
   
       // Check if the response is OK (status code 200)
       if (!response.ok) {
-        throw new Error(`Error fetching region details: ${response.statusText}`);
+        console.log('response',response);
+        throw new Error(`Error fetching region details ${response.statusText}`);
       }
   
       const data = await response.json();

@@ -7,11 +7,16 @@ import { Spinner } from '@/components/ui/spinner'; // Spinner component
 import Link from 'next/link';
 import { regions as initialRegions } from '@/lib/constants';
 
+interface IRegions {
+  regionName: string,
+  regionCode: string
+}
+
 // Simulate async API request for regions data
-const fetchRegions = () => {
+const fetchRegions = (): Promise<IRegions[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(initialRegions);
+      resolve(initialRegions as IRegions[]); // Cast to IRegions[]
     }, 1000); // Simulating 1 second delay
   });
 };
@@ -19,7 +24,7 @@ const fetchRegions = () => {
 const OverviewPage = () => {
   const [searchTerm, setSearchTerm] = useState(''); // User input state
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // Debounced state
-  const [regions, setRegions] = useState([]);
+  const [regions, setRegions] = useState<IRegions[]>([]);
   const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
@@ -69,7 +74,7 @@ const OverviewPage = () => {
         {/* Spinner while loading */}
         {loading ? (
           <div className="flex justify-center items-center w-full h-64">
-            <Spinner size="lg" /> {/* Spinner placed in the middle of the screen */}
+            <Spinner size="medium" /> {/* Spinner placed in the middle of the screen */}
           </div>
         ) : (
           // Regions Table

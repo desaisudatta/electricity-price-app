@@ -17,9 +17,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-
+import { ChartOptions } from 'chart.js';
+import { TabsContent } from '@/components/ui/tabs';
 // Register Chart.js components
-ChartJS.register(LineElement,BarElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend);
+ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend);
 
 export default function RegionDetailPage({ params }: { params: { regionCode: string } }) {
   const { regionCode } = params;
@@ -98,7 +99,7 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
       },
     ],
   };
-  const options = {
+  const options: ChartOptions<'bar' | 'line'> = {
     scales: {
       x: {
         title: {
@@ -132,20 +133,23 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
       },
     },
   };
-  
-  
+
+
 
   return (
     <div className="grid items-center justify-items-center p-2 sm:p-8 font-[family-name:var(--font-geist-sans)]">
       <h1 className="text-2xl font-bold mb-4">Region Details: {regions.filter((region) => region.regionCode === regionCode)[0].regionName}</h1>
 
       {/* Custom Tabs */}
-      <CustomTabs defaultValue="currentPrices" tabs={[
-        { value: 'currentPrices', label: 'Current Prices' },
-        { value: 'dailyLowHighAverage', label: 'Daily Low, High, Average' },
-        { value: 'priceVolatility', label: 'Price Volatility' },
-      ]}>
-        <div value="currentPrices">
+      <CustomTabs
+        defaultValue="currentPrices"
+        tabs={[
+          { value: 'currentPrices', label: 'Current Prices' },
+          { value: 'dailyLowHighAverage', label: 'Daily Low, High, Average' },
+          { value: 'priceVolatility', label: 'Price Volatility' },
+        ]}
+      >
+        <TabsContent value="currentPrices">
           {/* Current Prices Table */}
           <Table className="w-full table-auto">
             <thead>
@@ -163,22 +167,23 @@ export default function RegionDetailPage({ params }: { params: { regionCode: str
               ))}
             </tbody>
           </Table>
-        </div>
+        </TabsContent>
 
-        <div value="dailyLowHighAverage">
+        <TabsContent value="dailyLowHighAverage">
           {/* Daily Low, High, Average Chart */}
           <div className="w-full h-64">
             <Bar data={dailyLowHighAverageChartData} options={options} />
           </div>
-        </div>
+        </TabsContent>
 
-        <div value="priceVolatility">
+        <TabsContent value="priceVolatility">
           {/* Price Volatility Chart */}
           <div className="w-full h-64">
             <Line data={volatilityChartData} options={options} />
           </div>
-        </div>
+        </TabsContent>
       </CustomTabs>
+
     </div>
   );
 }

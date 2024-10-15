@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Electricity Price Application
+
+## Overview
+
+This is a Next.js application that displays electricity prices for various regions. The app includes two main pages:
+
+- **Overview Page**: Displays a list of regions with their current electricity prices, along with search and filter functionality.
+- **Detail Page**: Shows detailed electricity price data for a selected region, including custom tabs for various data types and charts.
+
+## Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [TailwindCSS](https://tailwindcss.com/)
+- **Data Fetching**: [React Query](https://tanstack.com/query/latest)
+- **Component Library**: [shadcn UI](https://ui.shadcn.com/) (or any other component library of your choice)
+
+## Features
+
+- Search and filter functionality on the overview page.
+- Detailed view of electricity price data for each region.
+- Responsive design for desktop and mobile devices.
+- User-friendly custom tabs for displaying different types of data.
+- Simple charts to visualize electricity price trends.
+
+## API
+
+The application fetches electricity price data from the **Energy Charts API**. Ensure you have access to the API and replace the API endpoint in the code as necessary.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Make sure you have the following installed on your machine:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- [Node.js](https://nodejs.org/) (version 18 or higher)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Installation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/desaisudatta/electricity-price-app.git
+   cd electricity-price-app
 
-## Learn More
+2. Install Dependencies:
+   npm install
+    # or
+   yarn install
 
-To learn more about Next.js, take a look at the following resources:
+3. Running the Application:
+   npm run dev
+    # or
+   yarn dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Docker
+To run the application using Docker, follow these steps:
 
-## Deploy on Vercel
+1. Build the Docker image:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+bash
+Copy code
+docker build -t electricity-price-app .
+Run the Docker container:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+bash
+Copy code
+docker run -p 3000:3000 electricity-price-app
